@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import com.microservice.SAPCommentService.client.*;
 import com.microservice.SAPCommentService.dto.*;
+import com.microservice.SAPCommentService.exceptions.custom.NotFoundException;
 import com.microservice.SAPCommentService.mapper.CommentMapper;
 import com.microservice.SAPCommentService.model.Comment;
 import com.microservice.SAPCommentService.repository.CommentRepository;
@@ -27,7 +28,7 @@ public class CommentService {
         try {
             user = userClient.getUserById(request.getAuthorId());
         } catch (FeignException.NotFound e) {
-            throw new RuntimeException("User with id " + request.getAuthorId() + " not found");
+            throw new NotFoundException("User with id " + request.getAuthorId() + " not found");
         }
 
         PostResponse post = null;
@@ -35,11 +36,11 @@ public class CommentService {
         try {
             post = postClient.getPostById(request.getPostId());
         } catch (FeignException.NotFound e) {
-            throw new RuntimeException("Post with id " + request.getPostId() + " not found");
+            throw new NotFoundException("Post with id " + request.getPostId() + " not found");
         }
 
         if (user == null || post == null)
-            throw new RuntimeException("User or post not found");
+            throw new NotFoundException("User or post not found");
 
         Comment comment = commentMapper.toModel(request);
         commentRepository.save(comment);
@@ -49,7 +50,7 @@ public class CommentService {
 
     public void deleteComment(Long commentId) {
         if (!commentRepository.existsById(commentId))
-            throw new RuntimeException("Comment with id " + commentId + " not found");
+            throw new NotFoundException("Comment with id " + commentId + " not found");
 
         commentRepository.deleteById(commentId);
     }
@@ -60,11 +61,11 @@ public class CommentService {
         try {
             postClient.getPostById(postId);
         } catch (FeignException.NotFound e) {
-            throw new RuntimeException("Post with id " + postId + " not found");
+            throw new NotFoundException("Post with id " + postId + " not found");
         }
 
         if (comments.isEmpty())
-            throw new RuntimeException("No comments found for post with id" + postId);
+            throw new NotFoundException("No comments found for post with id" + postId);
 
         return commentMapper.toResponseList(comments);
     }
